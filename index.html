@@ -57,9 +57,19 @@
   .x-credit{display:inline-block;margin-top:16px;font-size:13px;color:rgba(255,255,255,.7);padding:12px 4px}
   .x-credit:hover{color:#fff}
   .x-hint{font-size:12px;opacity:.55;margin-top:8px}
+  .x-ad{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);width:300px;height:250px;z-index:60;display:none;
+    border-radius:8px;overflow:hidden;background:rgba(0,0,0,.25)}
+  body.ad-on .x-ad{display:block}
+  body.ad-on .x-ov{padding-bottom:275px;overflow-y:auto;align-items:flex-start}
+  body.ad-on .x-ov .x-card{margin:auto}
+  @media (min-width:900px){
+    .x-ad{left:auto;right:24px;bottom:auto;top:50%;transform:translateY(-50%)}
+    body.ad-on .x-ov{padding-bottom:20px;align-items:center}
+  }
+  @media (max-height:520px) and (max-width:899px){ body.ad-on .x-ad{display:none} body.ad-on .x-ov{padding-bottom:20px} }
 </style>
 </head>
-<body>
+<body class="ad-on">
 <canvas id="c"></canvas>
 
 <div class="x-hud" id="hud">
@@ -221,7 +231,7 @@ function setLevel(k){
   $("hudLevel").textContent=L.name;
   if(state==="start"){lives=L.lives;timeLeft=L.time;hud();}
 }
-function show(ov){[startOv,pauseOv,overOv].forEach(function(o){o.classList.toggle("show",o===ov)});}
+function show(ov){[startOv,pauseOv,overOv].forEach(function(o){o.classList.toggle("show",o===ov)});document.body.classList.toggle("ad-on",!!ov);}
 function start(){
   initAudio();
   $("hudLevel").textContent=L.name;
@@ -466,6 +476,17 @@ function loop(now){
 setLevel("medium");hud();requestAnimationFrame(loop);
 })();
 </script>
+<div class="x-ad" id="adSlot" aria-label="Advertisement">
+<script>
+  atOptions = {
+    'key' : '2e9392d7cf35a481d851732075d6d45c',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/2e9392d7cf35a481d851732075d6d45c"></script>
+</div>
 </body>
 </html>
-<!-- Juicy Slice - free HTML5 fruit slicing game -->
