@@ -317,28 +317,39 @@ function burst(x,y,col,n,spd){
 }
 
 /* ---------- input ---------- */
+var lastPE=0;
 function pt(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
-cv.addEventListener("pointerdown",function(e){
-  initAudio();if(state!=="play")return;
-  down=true;lastPt=pt(e);trail.push({x:lastPt.x,y:lastPt.y,t:performance.now()});
-  try{cv.setPointerCapture(e.pointerId);}catch(_){}
-  e.preventDefault();
-});
-cv.addEventListener("pointermove",function(e){
+function startAt(p){initAudio();if(state!=="play")return;down=true;lastPt=p;trail.push({x:p.x,y:p.y,t:performance.now()});}
+function moveTo(p,hover){
   if(state!=="play")return;
-  var isMouse=e.pointerType==="mouse";
-  if(!down&&!isMouse)return;
-  var p=pt(e),now=performance.now();
+  if(!down&&!hover)return;
+  var now=performance.now();
   if(!lastPt){lastPt=p;trail.push({x:p.x,y:p.y,t:now});return;}
   var dx=p.x-lastPt.x,dy=p.y-lastPt.y;
   if(dx*dx+dy*dy<4)return;
   var ang=Math.atan2(dy,dx);
   for(var i=0;i<fruits.length;i++){var f=fruits[i];
-    if(!f.dead&&segHit(lastPt.x,lastPt.y,p.x,p.y,f.x,f.y,f.r)){sliceFruit(f,ang,now);if(state!=="play")break;}}
-  trail.push({x:p.x,y:p.y,t:now});lastPt=p;e.preventDefault();
-});
-function up(e){down=false;if(!e||e.pointerType!=="mouse"||e.type!=="pointerup")lastPt=null;}
-cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);cv.addEventListener("pointerleave",up);
+    if(!f.dead&&segHit(lastPt.x,lastPt.y,p.x,p.y,f.x,f.y,f.r*1.15)){sliceFruit(f,ang,now);if(state!=="play")break;}}
+  trail.push({x:p.x,y:p.y,t:now});lastPt=p;
+}
+function endAt(keep){down=false;if(!keep)lastPt=null;}
+/* pointer events (modern browsers) */
+cv.addEventListener("pointerdown",function(e){lastPE=performance.now();startAt(pt(e));
+  try{cv.setPointerCapture(e.pointerId);}catch(_){} e.preventDefault();});
+cv.addEventListener("pointermove",function(e){lastPE=performance.now();
+  var list=e.getCoalescedEvents?e.getCoalescedEvents():[];if(!list.length)list=[e];
+  for(var k=0;k<list.length;k++)moveTo(pt(list[k]),e.pointerType==="mouse");e.preventDefault();});
+cv.addEventListener("pointerup",function(e){lastPE=performance.now();endAt(e.pointerType==="mouse");});
+cv.addEventListener("pointercancel",function(){endAt(false);});
+cv.addEventListener("pointerleave",function(){endAt(false);});
+/* mouse + touch fallbacks (only if no pointer event fired just before) */
+function fresh(){return performance.now()-lastPE>120;}
+window.addEventListener("mousemove",function(e){if(fresh()&&e.target===cv)moveTo(pt(e),true);});
+cv.addEventListener("mousedown",function(e){if(fresh())startAt(pt(e));});
+window.addEventListener("mouseup",function(){if(fresh())endAt(true);});
+cv.addEventListener("touchstart",function(e){if(fresh()&&e.touches[0])startAt(pt(e.touches[0]));e.preventDefault();},{passive:false});
+cv.addEventListener("touchmove",function(e){if(fresh()&&e.touches[0])moveTo(pt(e.touches[0]),false);e.preventDefault();},{passive:false});
+cv.addEventListener("touchend",function(){if(fresh())endAt(false);});
 
 window.addEventListener("keydown",function(e){
   var k=e.key;
