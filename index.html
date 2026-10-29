@@ -87,7 +87,7 @@
     <h1>Juicy Slice</h1>
     <p class="sub">Swipe fast. Slice everything. Except bombs.</p>
     <ul>
-      <li>🍉 Drag or swipe across fruit to slice it: +1</li>
+      <li>🍉 Move the mouse (or swipe on phone) across fruit: +1</li>
       <li>⚡ 3+ fruits in one swipe = combo bonus</li>
       <li>🌟 Golden fruit = +5</li>
       <li>💔 Missed fruit costs a life; you have <span class="js-lives">3</span></li>
@@ -325,8 +325,11 @@ cv.addEventListener("pointerdown",function(e){
   e.preventDefault();
 });
 cv.addEventListener("pointermove",function(e){
-  if(!down||state!=="play")return;
+  if(state!=="play")return;
+  var isMouse=e.pointerType==="mouse";
+  if(!down&&!isMouse)return;
   var p=pt(e),now=performance.now();
+  if(!lastPt){lastPt=p;trail.push({x:p.x,y:p.y,t:now});return;}
   var dx=p.x-lastPt.x,dy=p.y-lastPt.y;
   if(dx*dx+dy*dy<4)return;
   var ang=Math.atan2(dy,dx);
@@ -334,7 +337,7 @@ cv.addEventListener("pointermove",function(e){
     if(!f.dead&&segHit(lastPt.x,lastPt.y,p.x,p.y,f.x,f.y,f.r)){sliceFruit(f,ang,now);if(state!=="play")break;}}
   trail.push({x:p.x,y:p.y,t:now});lastPt=p;e.preventDefault();
 });
-function up(){down=false;lastPt=null;}
+function up(e){down=false;if(!e||e.pointerType!=="mouse"||e.type!=="pointerup")lastPt=null;}
 cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);cv.addEventListener("pointerleave",up);
 
 window.addEventListener("keydown",function(e){
